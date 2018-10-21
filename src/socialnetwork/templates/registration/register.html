@@ -1,0 +1,8 @@
+<form class="" action="{%url 'register' %}" method="post">
+  {%csrf_token%}
+  {%if form.errors%}
+    erros in form
+  {%endif%}
+  {{form}}
+  <input type="submit" name="" value="regiser">
+</form>

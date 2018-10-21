@@ -1,0 +1,192 @@
+{%extends 'base.html'%}
+
+
+{% block test %}
+<script>
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, '\\$&');
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+  $(document).ready(function(){
+    console.log("Working");
+    var query = getParameterByName('search');
+    var tlist = [];
+    var tweetNext;
+
+    function attachTweet(tweetValue,prepend){
+      //console.log(key);
+      //console.log(value);
+      var url = tweetValue.user.url;
+      var tcontent = tweetValue.content;
+      var user = tweetValue.user;
+      var usr_data = tweetValue.date_display;
+      //console.log(tcontent);
+      var wholedata = "<div class=\"media\"><div class=\"media-body\">" + tcontent +"<br> via <a href='"+ url +"'>" +user.username + "</a> | " + usr_data +" | "+" <a href='#'>View</a>"+ "<hr></div></div>"
+
+      if(prepend == true){
+        $(".new-container").prepend(wholedata)
+      }
+      else {
+        $(".new-container").append(wholedata)
+      }
+    }
+
+    function generateTweets(){
+      if(tlist == 0){
+        $(".new-container").text("Search result 0.")
+      }
+      else {
+      $.each(tlist,function(key,value){
+        attachTweet(value);
+      })
+    }
+
+    }
+
+      function fetchTweets(url){
+        var fetchurl;
+        if(!url)
+        {
+          fetchurl = "/api/tweet/"
+        }
+        else {
+            fetchurl = url;
+        }
+        $.ajax({
+                url : fetchurl,
+                data : {
+                  "search":query
+                },
+                method:"GET",
+                success: function(data){
+                  //console.log(data);
+                  tlist = data.results;
+                  if(data.next)
+                  {
+                    tweetNext = data.next;
+
+                  }
+                  else {
+                    $('#loader').hide()
+                  }
+                  generateTweets()
+
+                },
+                error: function(data){
+                  console.log("error");
+                }});
+      }
+      fetchTweets()
+
+
+
+      $("#loader").click(function(e){
+        e.preventDefault();
+        if(tweetNext){
+          fetchTweets(tweetNext)
+        }
+      })
+
+    var defaultcount = 140;
+    var currentcount = 0;
+    $("#tweet-form").append("<span id='charleft'>"+defaultcount+"</span>")
+    $("#tweet-form textarea").keyup(function(e){
+      //console.log(e.key);
+      var key = $(this).val();
+      currentcount =defaultcount - key.length;
+      $("#charleft").text(currentcount)
+      if (currentcount > 0 ){
+        $("#charleft").text(currentcount).removeClass("green-color")
+        $("#charleft").text(currentcount).removeClass("red-color")
+      }
+      else if(currentcount == 0)
+      {
+        $("#charleft").text(currentcount).addClass("green-color")
+        $("#charleft").text(currentcount).removeClass("red-color")
+      }
+      else if(currentcount < 0)
+      {
+        $("#charleft").text(currentcount).removeClass("green-color")
+        $("#charleft").text(currentcount).addClass("red-color")
+      }
+
+    })
+
+            $("#tweet-form").submit(function(e){
+              e.preventDefault();
+              console.log(e);
+              console.log();
+              var currentData = $(this).serialize()
+              var tis = $(this)
+              if(currentcount >=0){
+              $.ajax({
+                      url : "/api/tweet/create/",
+                      data : currentData,
+                      method:"POST",
+                      success: function(data){
+                        //console.log(data);
+                        tis.find("[name=content],textarea").val("")
+                        attachTweet(data,true);
+                        //tlist = data;
+                      // generateTweets()
+
+                      },
+                      error: function(data){
+                        console.log("error");
+                      }});
+                    }
+                    else{
+                      console.log("MSg length is tooo long");
+                    }
+
+              fetchTweets()
+            })
+
+  })
+</script>
+{% endblock test%}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{%block content%}
+
+
+
+
+
+
+
+<div class="row">
+  <div class="col-sm-3">
+    <h4> {{request.user|capfirst}}</h4>
+  </div>
+  <div class="col-sm-8 col-sm-offset-2">
+
+    {%if not request.GET.search%}
+      {% include "tweets/forms.html" with form=create_form action_url=action_url btn_title='Tweet' id='tweet-form'%}
+    {%endif%}
+<hr>
+
+<div class="new-container">
+
+</div>
+<a href="#" id="loader">Load more..</a>
+</div>
+</div>
+{% endblock content%}

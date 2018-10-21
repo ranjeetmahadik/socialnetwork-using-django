@@ -1,0 +1,15 @@
+<form class="" action="{% url 'login' %}" method="post">
+  {% csrf_token %}
+  Username : {{form.username}}
+  Password : {{form.password}}
+   <input type="submit" value="Login"><br>
+   <input type="hidden" name="next" value="{{next}}">
+</form>
+
+{% if form.errors%}
+  <p>Error</p>
+{%endif%}
+
+{%if next %}
+cannt access
+{%endif%}

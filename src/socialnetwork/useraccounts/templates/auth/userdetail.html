@@ -1,0 +1,39 @@
+{%extends 'base.html'%}
+
+{%block content%}
+<div class="row">
+  <div class="col-sm-3">
+    <h1> {{object.username|capfirst}}</h1>
+    <br>
+    <h4>Following {{object.profile.get_following.all.count}}</h4>
+    {% for user in object.profile.get_following.all %}
+        <a href="/{{user.username}}">{{user.username}}</a>
+      {%empty%}
+        <h6>Not following Any Users Currently.</h6>
+    {%endfor%}
+    <hr>
+    <h4>Followers {{object.followed_by.all.count}}</h4>
+    {% for users in object.followed_by.all %}
+      <a href="/{{users.user.username}}">{{users.user.username}}</a>
+      {%empty%}
+        <h6>Not following Any Users Currently.</h6>
+    {%endfor%}
+    <hr>
+    <br><br><br>
+    <a class="btn btn-primary" href="{{object.profile.get_followurl}}">
+      {%if following%} Unfollow {%else%}
+      Follow{%endif%}
+    </a>
+  </div>
+ <h3>Tweets </h3><br><br>
+  {%for i in object.tweet_set.all %}
+    {{i}}<br>
+  {%endfor%}
+
+</div>
+
+
+
+
+
+{% endblock content %}
